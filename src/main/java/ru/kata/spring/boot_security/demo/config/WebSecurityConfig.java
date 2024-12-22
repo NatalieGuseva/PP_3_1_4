@@ -1,67 +1,56 @@
 package ru.kata.spring.boot_security.demo.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import ru.kata.spring.boot_security.demo.service.UserDetailServiceImpl;
+import ru.kata.spring.boot_security.demo.service.UserService;
+
 
 @Configuration
-public class WebSecurityConfig {
+@EnableWebSecurity
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+    private final SuccessUserHandler successUserHandler;
+    private final UserService userService;
 
-    @Autowired
-    private UserDetailServiceImpl userDetailServiceImpl;
+    public WebSecurityConfig(SuccessUserHandler successUserHandler, UserService userService) {
+        this.successUserHandler = successUserHandler;
+        this.userService = userService;
+    }
 
-    @Autowired
-    private SuccessUserHandler successUserHandler;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable()
+                .authorizeRequests()
+                .antMatchers("/admin/**").hasRole("ADMIN")
+                .antMatchers("/user/**").hasAnyRole("ADMIN", "USER")
+                .anyRequest().authenticated()
+                .and()
+                .formLogin().successHandler(successUserHandler)
+                .loginPage("/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
+                .permitAll()
+                .and()
+                .logout()
+                .permitAll();
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-
         authProvider.setPasswordEncoder(passwordEncoder());
-        authProvider.setUserDetailsService(userDetailServiceImpl);
+        authProvider.setUserDetailsService(userService);
         return authProvider;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests()
-                .requestMatchers("/", "/login", "/logout").permitAll()
-                .requestMatchers("/user/**", "/api/user").hasAnyRole("USER", "ADMIN")
-                .requestMatchers("/api/**", "/panel").hasRole("ADMIN")
-                .anyRequest().authenticated()
-                .and()
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .usernameParameter("email")
-                        .passwordParameter("password")
-                        .successHandler(successUserHandler)
-                        .permitAll())
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/")
-                        .permitAll())
-                .csrf(AbstractHttpConfigurer::disable)
-                .authenticationProvider(authenticationProvider());
-
-        return http.build();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return new ProviderManager(authenticationProvider());
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

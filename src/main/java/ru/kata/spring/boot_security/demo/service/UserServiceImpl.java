@@ -1,79 +1,95 @@
 package ru.kata.spring.boot_security.demo.service;
 
-
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ru.kata.spring.boot_security.demo.models.Role;
-import ru.kata.spring.boot_security.demo.models.User;
-import ru.kata.spring.boot_security.demo.repository.UserRepo;
+import org.springframework.transaction.annotation.Transactional;
+import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.repositories.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepo userRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepo;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserServiceImpl(UserRepository userRepo, PasswordEncoder passwordEncoder) {
+        this.userRepo = userRepo;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
-    public List<User> getAllUsers() {
+    public User findUserById(Long userId) {
+        Optional<User> userFromDb = userRepo.findById(userId);
+        return userFromDb.orElse(new User());
+    }
+
+    @Override
+    public List<User> findAllUsers() {
         return userRepo.findAll();
     }
 
     @Override
-    public User getUserById(Long id) {
-        return userRepo.findById(id).orElse(null);
-    }
-
     @Transactional
-    @Override
-    public User saveUser(User existingUser, User user) {
-        if (existingUser != null && (user.getPassword() == null || user.getPassword().isEmpty())) {
-            user.setPassword(existingUser.getPassword());
-        } else {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
-        if (existingUser != null) {
-            user.setId(existingUser.getId());
-        }
-        if (existingUser != null && (user.getAuthorities() == null || user.getAuthorities().isEmpty())) {
-            user.setRoles((Set<Role>) existingUser.getAuthorities());
-        }
-        if (existingUser != null && (user.getFirstName() == null || user.getFirstName().isEmpty())) {
-            user.setFirstName(existingUser.getFirstName());
-        }
-        if (existingUser != null && (user.getLastName() == null || user.getLastName().isEmpty())) {
-            user.setLastName(existingUser.getLastName());
-        }
-        if (existingUser != null && (user.getEmail() == null || user.getEmail().isEmpty())) {
-            user.setEmail(existingUser.getEmail());
-        }
-        if (existingUser != null && (user.getAge() == null)) {
-            user.setAge(existingUser.getAge());
-        }
-        return userRepo.save(user);
+    public void saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoles(user.getRoles());
+        userRepo.save(user);
     }
 
+    @Override
     @Transactional
-    @Override
-    public void deleteUser(User user) {
-        userRepo.delete(user);
+    public boolean updateUser(Long id, User updatedUser) {
+        Optional<User> userFromDb = userRepo.findById(id);
+        if (userFromDb.isPresent()) {
+            User existingUser = userFromDb.get();
+            // Обновляем поля пользователя
+            existingUser.setFirstName(updatedUser.getFirstName());
+            existingUser.setLastName(updatedUser.getLastName());
+            existingUser.setEmail(updatedUser.getEmail());
+            existingUser.setAge(updatedUser.getAge());
+            existingUser.setRoles(updatedUser.getRoles());
+            // Обновляем пароль, если он был изменен
+            if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+                existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+            }
+            userRepo.save(existingUser);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public User getUserByFirstname(String name) {
-        return userRepo.findByFirstname(name);
+    @Transactional
+    public boolean deleteUser(Long userId) {
+        if (userRepo.findById(userId).isPresent()) {
+            userRepo.deleteById(userId);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public Optional<User> getUserByEmail(String email) {
+    public User findByEmail(String email) {
         return userRepo.findByEmail(email);
     }
+
+    @Override
+    @Query(value = "select u from User u left join fetch u.roles where u.email=:email")
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepo.findByEmail(email);
+        if (user == null) {
+            throw new UsernameNotFoundException(String.format("User %s not found", email));
+        }
+        return user;
+    }
 }
+

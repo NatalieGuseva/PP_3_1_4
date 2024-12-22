@@ -1,26 +1,28 @@
 package ru.kata.spring.boot_security.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import ru.kata.spring.boot_security.demo.models.User;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.security.Principal;
 
-@Controller
+@RestController
+@RequestMapping("/user")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @GetMapping("/user")
-    public String user(Principal principal, Model model) {
-        User user = userService.getUserByFirstname(principal.getName());
-        model.addAttribute("user", user);
-        Boolean hasRole = user.getAuthorities().stream().anyMatch(g -> g.getAuthority().equals("ROLE_ADMIN"));
-        model.addAttribute("hasRole", hasRole);
-        return "user";
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/profile_user")
+    public User getUserProfile(Principal principal) {
+        return userService.findByEmail(principal.getName());
     }
 }
