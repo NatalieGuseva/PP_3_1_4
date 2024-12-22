@@ -13,6 +13,7 @@ import java.util.List;
 @Component
 public class Init {
 
+
     private final RoleService roleService;
     private final UserService userService;
 

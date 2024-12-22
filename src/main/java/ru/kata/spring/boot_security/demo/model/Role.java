@@ -26,6 +26,7 @@ public class Role implements GrantedAuthority {
     public Role() {
     }
 
+
     public Role(Long id) {
         this.id = id;
     }

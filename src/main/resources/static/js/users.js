@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setupCloseButtons();
 });
 
+
 // Функция для получения и отображения текущего пользователя
 function fetchCurrentUser() {
     console.log('Fetching current user info...');
