@@ -28,6 +28,50 @@ function fetchCurrentUser() {
         });
 }
 
+fetch('/admin/currentUser')
+    .then(r => r.json())
+    .then(data => userTable(data))
+
+const userInfoAdmin = document.getElementById('about-user')
+let userInfoOutput = '';
+const userTable = (user) => {
+    role = '';
+    if (user.roles) {
+        user.roles.forEach((r) => role += r.name.substring(5) + " ");
+    }
+    userInfoOutput = `
+        <tr>
+            <td>${user.id}</td>
+            <td>${user.firstName}</td>
+            <td>${user.lastName}</td>
+            <td>${user.age}</td>
+            <td>${user.email}</td>
+            <td>${role}</td>
+        </tr>
+     `
+    userInfoAdmin.innerHTML = userInfoOutput;
+}
+
+function loadRoles() {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', rolesListUrl);
+    xhr.onreadystatechange = () => {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                const data = JSON.parse(xhr.responseText);
+                let options = '';
+                for (const {id, name} of data) {
+                    options += `<option value="${id}">${name}</option>`;
+                }
+                selectRoleForm.innerHTML = options;
+            } else {
+                console.error('Error:', xhr.status);
+            }
+        }
+    };
+    xhr.send();
+}
+
 // Функция для получения и отображения всех пользователей
 function fetchUsers() {
     console.log('Fetching users...');

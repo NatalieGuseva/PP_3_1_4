@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch("/user/profile_user")
         .then(response => response.json())
         .then(user => {
-
             // Заполняем поля на странице
             document.getElementById("userId").textContent = user.id;
             document.getElementById("firstName").textContent = user.firstName;

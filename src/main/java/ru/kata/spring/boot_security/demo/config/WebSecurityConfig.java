@@ -1,6 +1,5 @@
 package ru.kata.spring.boot_security.demo.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -9,23 +8,22 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.kata.spring.boot_security.demo.service.UserService;
-
+import ru.kata.spring.boot_security.demo.config.SuccessUserHandler;
+import ru.kata.spring.boot_security.demo.service.DetailServiceImpl;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final SuccessUserHandler successUserHandler;
-    private final UserService userService;
+    private final DetailServiceImpl detailServiceImpl;
 
-    public WebSecurityConfig(SuccessUserHandler successUserHandler, UserService userService) {
+    public WebSecurityConfig(SuccessUserHandler successUserHandler, DetailServiceImpl detailServiceImpl) {
         this.successUserHandler = successUserHandler;
-        this.userService = userService;
+        this.detailServiceImpl = detailServiceImpl;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
         http.csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/admin/**").hasRole("ADMIN")
@@ -46,7 +44,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setPasswordEncoder(passwordEncoder());
-        authProvider.setUserDetailsService(userService);
+        authProvider.setUserDetailsService(detailServiceImpl);
         return authProvider;
     }
 
