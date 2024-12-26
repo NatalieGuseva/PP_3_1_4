@@ -19,6 +19,7 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final PasswordEncoder passwordEncoder;
+
     private final UserRepository userRepo;
 
     @Autowired
@@ -59,6 +60,7 @@ public class UserServiceImpl implements UserService {
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setAge(updatedUser.getAge());
             existingUser.setRoles(updatedUser.getRoles());
+
             // Обновляем пароль, если он был изменен
             if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
                 existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
@@ -83,6 +85,7 @@ public class UserServiceImpl implements UserService {
     public User findByEmail(String email) {
         return userRepo.findByEmail(email);
     }
+
 
     @Override
     @Query(value = "select u from User u left join fetch u.roles where u.email=:email")

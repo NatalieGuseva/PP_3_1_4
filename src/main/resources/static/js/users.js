@@ -46,6 +46,7 @@ const userTable = (user) => {
             <td>${user.lastName}</td>
             <td>${user.age}</td>
             <td>${user.email}</td>
+         
             <td>${role}</td>
         </tr>
      `
@@ -94,6 +95,7 @@ function fetchUsers() {
                     <td>${user.lastName}</td>
                     <td>${user.age}</td>
                     <td>${user.email}</td>
+                    
                     <td>${user.roles.map(role => role.name).join(', ')}</td> 
                     <td><button class="btn btn-info" onclick="openEditUserPopup(${user.id})">Edit</button></td>
                     <td><button class="btn btn-danger" onclick="openDeleteUserPopup(${user.id})">Delete</button></td>
@@ -198,6 +200,7 @@ function openEditUserPopup(userId) {
             document.getElementById('editLastName').value = user.lastName;
             document.getElementById('editAge').value = user.age;
             document.getElementById('editEmail').value = user.email;
+            document.getElementById('password').value = user.password;
             const editRolesSelect = document.getElementById('editRoles');
             Array.from(editRolesSelect.options).forEach(option => {
                 option.selected = user.roles.some(role => role.id === parseInt(option.value, 10));
@@ -224,6 +227,7 @@ document.getElementById('editUserForm').addEventListener('submit', function (eve
         lastName: formData.get('editLastName'),
         age: parseInt(formData.get('editAge'), 10),
         email: formData.get('editEmail'),
+        password: formData.get(('editPassword')),
         roles: rolesSelected
     };
     console.log('Updating user:', user);

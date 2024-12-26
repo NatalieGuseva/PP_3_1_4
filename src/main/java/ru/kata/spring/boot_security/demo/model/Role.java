@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Entity
 @Table(name = "roles")
@@ -20,12 +18,10 @@ public class Role implements GrantedAuthority {
 
     @ManyToMany(mappedBy = "roles")
     @JsonIgnore
-    List<User> users;
-
+    private List<User> users;
 
     public Role() {
     }
-
 
     public Role(Long id) {
         this.id = id;
@@ -64,6 +60,5 @@ public class Role implements GrantedAuthority {
     public String getAuthority() {
         return getName();
     }
-
 
 }

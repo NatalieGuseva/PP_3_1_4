@@ -17,7 +17,6 @@ import java.util.List;
 @Table(name = "users")
 public class User implements UserDetails {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,7 +34,7 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     @NotEmpty
-    List<Role> roles;
+    private List<Role> roles;
 
     public User(String firstName, String lastName, int age, String email, String password, List<Role> roles) {
         this.firstName = firstName;

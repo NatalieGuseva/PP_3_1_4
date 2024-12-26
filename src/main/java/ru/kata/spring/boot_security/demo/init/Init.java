@@ -13,7 +13,6 @@ import java.util.List;
 @Component
 public class Init {
 
-
     private final RoleService roleService;
     private final UserService userService;
 
@@ -36,10 +35,10 @@ public class Init {
                 .filter(role -> role.getName().equals("ROLE_USER"))
                 .toList();
 
-        userService.saveUser (new User("Наталья", "Михалева", 35,
+        userService.saveUser(new User("Наталья", "Михалева", 35,
                 "admin@gmail.com", "admin", adminRole));
 
-        userService.saveUser (new User("Ivanov", "Ivan", 30,
+        userService.saveUser(new User("Ivanov", "Ivan", 30,
                 "user@mail.ru", "user", userRole));
     }
 }

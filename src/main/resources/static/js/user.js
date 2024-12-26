@@ -1,20 +1,87 @@
-document.addEventListener("DOMContentLoaded", function () {
-    // Запрашиваем данные о пользователе через API
-    fetch("/user/profile_user")
-        .then(response => response.json())
-        .then(user => {
-            // Заполняем поля на странице
-            document.getElementById("userId").textContent = user.id;
-            document.getElementById("firstName").textContent = user.firstName;
-            document.getElementById("lastName").textContent = user.lastName;
-            document.getElementById("age").textContent = user.age;
-            document.getElementById("email").textContent = user.email;
-            // Обработка ролей (если есть несколько)
-            let roles = user.authorities.map(role => role.authority.substring(5)).join(", ");
-            document.getElementById("roles").textContent = roles;
-            // Для отображения роли пользователя в навигации\
-            document.getElementById("navbarUserEmail").textContent = user.username;
-            document.getElementById("navbarUserRoles").textContent = roles;
-        })
-        .catch(error => console.error("Error fetching user data:", error));
+document.addEventListener('DOMContentLoaded', function () {
+    fetchCurrentUser();
+    fetchUsers();
+    loadRoles();
+    setupCloseButtons();
 });
+
+
+// Функция для получения и отображения текущего пользователя
+function fetchCurrentUser() {
+    console.log('Fetching current user info...');
+    fetch('/user/currentUser') // Этот URL должен совпадать с тем, что в контроллере
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch current user info');
+            }
+            return response.json();
+        })
+        .then(user => {
+            console.log('Current user fetched:', user);
+            const emailSpan = document.getElementById('currentUserEmail');
+            const roleSpan = document.getElementById('currentUserRole');
+            emailSpan.textContent = user.email;
+            roleSpan.textContent = user.roles.map(role => role.name).join(', '); // Преобразуем массив ролей в строку
+        })
+        .catch(error => {
+            console.error('Error fetching current user info:', error);
+        });
+}
+
+fetch('/user/currentUser')
+    .then(r => r.json())
+    .then(data => userTable(data))
+
+const userInfoAdmin = document.getElementById('about-user')
+let userInfoOutput = '';
+const userTable = (user) => {
+    role = '';
+    if (user.roles) {
+        user.roles.forEach((r) => role += r.name.substring(5) + " ");
+    }
+    userInfoOutput = `
+        <tr>
+            <td>${user.id}</td>
+            <td>${user.firstName}</td>
+            <td>${user.lastName}</td>
+            <td>${user.age}</td>
+            <td>${user.email}</td>
+            <td>${role}</td>
+        </tr>
+     `
+    userInfoAdmin.innerHTML = userInfoOutput;
+}
+
+function loadRoles() {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', rolesListUrl);
+    xhr.onreadystatechange = () => {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                const data = JSON.parse(xhr.responseText);
+                let options = '';
+                for (const {id, name} of data) {
+                    options += `<option value="${id}">${name}</option>`;
+                }
+                selectRoleForm.innerHTML = options;
+            } else {
+                console.error('Error:', xhr.status);
+            }
+        }
+    };
+    xhr.send();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
